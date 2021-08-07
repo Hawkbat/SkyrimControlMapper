@@ -1,0 +1,42 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 12px;
+}
+
+tr th {
+  background: #ddd;
+}
+
+tr td {
+  background: #fff;
+}
+
+tr:nth-child(odd) th {
+  background: #ccc;
+}
+
+tr:nth-child(odd) td {
+  background: #eee;
+}
+
+button {
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 3px;
+  border: none;
+  background: none;
+}
+
+pre {
+  tab-size: 4;
+  background: #eee;
+  overflow: auto;
+  max-width: 600px;
+  max-height: 400px;
+}
+
+[title] {
+  cursor: help;
+}
