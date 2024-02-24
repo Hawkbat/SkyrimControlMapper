@@ -19,7 +19,7 @@ tr:nth-child(odd) td {
   background: #eee;
 }
 
-button {
+table button {
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;

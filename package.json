@@ -4,6 +4,7 @@
   "description": "Visual editor for Skyrim SE controlmap.txt files",
   "main": "index.js",
   "scripts": {
+    "build": "npx tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Hawkbar",
@@ -11,5 +12,8 @@
   "dependencies": {
     "@types/react": "^17.0.16",
     "@types/react-dom": "^17.0.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
   }
 }

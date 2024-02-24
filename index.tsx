@@ -27,7 +27,7 @@ interface Binding {
 }
 
 function parseNumber(s: string): number {
-    return s.startsWith('0x') ? parseInt(s.substr(2), 16) : parseInt(s, 10)
+    return s.startsWith('0x') ? parseInt(s.substring(2), 16) : parseInt(s, 10)
 }
 
 function parseBoolean(s: string): boolean {
@@ -45,11 +45,11 @@ function parseToken(s: string, ptr: { x: number }) {
 
 function parseSimpleBindingValue(s: string, ptr: { x: number }): BindingValue {
     let left: BindingValue
-    if (s.substr(ptr.x, 3) === '!0,') {
+    if (s.substring(ptr.x, ptr.x + 3) === '!0,') {
         ptr.x += 3
         const alias = parseToken(s, ptr)
         left = { type: 'alias', alias }
-    } else if (s.substr(ptr.x, 2) === '0x') {
+    } else if (s.substring(ptr.x, ptr.x + 2) === '0x') {
         const code = parseNumber(parseToken(s, ptr))
         if (code === 0xff)
             left = { type: 'none' }
@@ -122,7 +122,7 @@ function parseBinding(s: string): Binding {
 }
 
 function parseBindingGroup(lines: string[], ptr: { y: number }): BindingGroup {
-    const name = lines[ptr.y - 1].substr(3).trim()
+    const name = lines[ptr.y - 1].substring(3).trim()
     const bindings: Binding[] = []
     while (ptr.y < lines.length && lines[ptr.y].trim()) {
         const binding = parseBinding(lines[ptr.y++])
@@ -535,10 +535,15 @@ interface StoredState {
 
 const LOCAL_STORAGE_KEY = 'skyrim-control-mapper-file'
 
+const DEFAULTS_KEYS = [
+    'Skyrim AE 1.6.640'
+]
+
 function App() {
     const [file, setFile] = React.useState<BindingFile | null>(null)
     const [mode, setMode] = React.useState<'kbm' | 'pad' | 'all'>('pad')
     const [showFlags, setShowFlags] = React.useState(false)
+    const [defaultsKey, setDefaultsKey] = React.useState(DEFAULTS_KEYS[0])
 
     React.useEffect(() => {
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
@@ -563,6 +568,13 @@ function App() {
         const s = await f?.text()
         if (!f || !s) return
         const file = parseBindingFile(s, f.name)
+        setFile(file)
+    }
+
+    const loadDefaults = async () => {
+        var res = await fetch(`defaults/${defaultsKey}.txt`)
+        var text = await res.text()
+        const file = parseBindingFile(text, defaultsKey)
         setFile(file)
     }
 
@@ -622,7 +634,7 @@ function App() {
 
     const downloadUrl = React.useMemo(() => {
         if (!file) return ''
-        return `data:,${standardFileHeader}${printBindingFile(file)}`
+        return `data:,${encodeURIComponent(`${standardFileHeader}${printBindingFile(file)}`)}`
     }, [file])
 
     return <>
@@ -631,6 +643,14 @@ function App() {
             &nbsp;
             <input type="file" accept=".txt" onChange={async e => onUpload(e.target.files?.item(0))} />
         </label>
+        <br />
+        <select value={defaultsKey} onChange={e => setDefaultsKey(e.target.value)}>
+            {DEFAULTS_KEYS.map(k => <option key={k}>{k}</option>)}
+        </select>
+        <button onClick={async () => loadDefaults()}>
+            Load Defaults
+        </button>
+        <br />
         {file ? <>
             <a href={downloadUrl} download="controlmap.txt">
                 Download controlmap.txt
@@ -706,7 +726,7 @@ function App() {
                     </tr>)}
                 </React.Fragment>)}
             </table>
-            <pre>{downloadUrl.substr('data:,'.length)}</pre>
+            <pre>{downloadUrl.substring('data:,'.length)}</pre>
         </> : null}
     </>
 }

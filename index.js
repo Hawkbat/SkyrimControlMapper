@@ -1,6 +1,6 @@
 "use strict";
 function parseNumber(s) {
-    return s.startsWith('0x') ? parseInt(s.substr(2), 16) : parseInt(s, 10);
+    return s.startsWith('0x') ? parseInt(s.substring(2), 16) : parseInt(s, 10);
 }
 function parseBoolean(s) {
     return s === '1';
@@ -15,12 +15,12 @@ function parseToken(s, ptr) {
 }
 function parseSimpleBindingValue(s, ptr) {
     let left;
-    if (s.substr(ptr.x, 3) === '!0,') {
+    if (s.substring(ptr.x, ptr.x + 3) === '!0,') {
         ptr.x += 3;
         const alias = parseToken(s, ptr);
         left = { type: 'alias', alias };
     }
-    else if (s.substr(ptr.x, 2) === '0x') {
+    else if (s.substring(ptr.x, ptr.x + 2) === '0x') {
         const code = parseNumber(parseToken(s, ptr));
         if (code === 0xff)
             left = { type: 'none' };
@@ -93,7 +93,7 @@ function parseBinding(s) {
     };
 }
 function parseBindingGroup(lines, ptr) {
-    const name = lines[ptr.y - 1].substr(3).trim();
+    const name = lines[ptr.y - 1].substring(3).trim();
     const bindings = [];
     while (ptr.y < lines.length && lines[ptr.y].trim()) {
         const binding = parseBinding(lines[ptr.y++]);
@@ -479,10 +479,14 @@ function BindingValueCell({ v, type, aliases, onChange }) {
             ")") : null);
 }
 const LOCAL_STORAGE_KEY = 'skyrim-control-mapper-file';
+const DEFAULTS_KEYS = [
+    'Skyrim AE 1.6.640'
+];
 function App() {
     const [file, setFile] = React.useState(null);
     const [mode, setMode] = React.useState('pad');
     const [showFlags, setShowFlags] = React.useState(false);
+    const [defaultsKey, setDefaultsKey] = React.useState(DEFAULTS_KEYS[0]);
     React.useEffect(() => {
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (stored) {
@@ -505,6 +509,12 @@ function App() {
         if (!f || !s)
             return;
         const file = parseBindingFile(s, f.name);
+        setFile(file);
+    };
+    const loadDefaults = async () => {
+        var res = await fetch(`defaults/${defaultsKey}.txt`);
+        var text = await res.text();
+        const file = parseBindingFile(text, defaultsKey);
         setFile(file);
     };
     const setGroup = (g, i) => {
@@ -563,12 +573,16 @@ function App() {
     const downloadUrl = React.useMemo(() => {
         if (!file)
             return '';
-        return `data:,${standardFileHeader}${printBindingFile(file)}`;
+        return `data:,${encodeURIComponent(`${standardFileHeader}${printBindingFile(file)}`)}`;
     }, [file]);
     return React.createElement(React.Fragment, null,
         React.createElement("label", null,
             "Upload controlmap.txt \u00A0",
             React.createElement("input", { type: "file", accept: ".txt", onChange: async (e) => onUpload(e.target.files?.item(0)) })),
+        React.createElement("br", null),
+        React.createElement("select", { value: defaultsKey, onChange: e => setDefaultsKey(e.target.value) }, DEFAULTS_KEYS.map(k => React.createElement("option", { key: k }, k))),
+        React.createElement("button", { onClick: async () => loadDefaults() }, "Load Defaults"),
+        React.createElement("br", null),
         file ? React.createElement(React.Fragment, null,
             React.createElement("a", { href: downloadUrl, download: "controlmap.txt" }, "Download controlmap.txt"),
             React.createElement("h3", null, file.name),
@@ -649,6 +663,6 @@ function App() {
                             React.createElement("input", { type: "checkbox", checked: getBit(b.flags, 6), onChange: e => setFlagBit(6, e.target.checked, j, i) })),
                         React.createElement("td", null,
                             React.createElement("input", { type: "checkbox", checked: getBit(b.flags, 7), onChange: e => setFlagBit(7, e.target.checked, j, i) }))) : null))))),
-            React.createElement("pre", null, downloadUrl.substr('data:,'.length))) : null);
+            React.createElement("pre", null, downloadUrl.substring('data:,'.length))) : null);
 }
 ReactDOM.render(React.createElement(App, null), document.getElementById('root'));
