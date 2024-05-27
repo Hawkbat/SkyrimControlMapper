@@ -536,7 +536,8 @@ interface StoredState {
 const LOCAL_STORAGE_KEY = 'skyrim-control-mapper-file'
 
 const DEFAULTS_KEYS = [
-    'Skyrim AE 1.6.640'
+    'Skyrim AE 1.6.640',
+    'Skyrim SE 1.5.97'
 ]
 
 function App() {
